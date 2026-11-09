@@ -1,0 +1,429 @@
+// Database Markup Language (DBML) for dbdiagram.io
+// Project: Restaurant Management System
+// Target Database: MySQL / Laravel 10
+
+Project restaurant_management_system {
+  database_type: 'MySQL'
+  Note: '''
+    # Restaurant Management System Database Schema
+    Designed for multi-branch restaurant management, E-Menu ordering (Dine-in, Takeaway, Delivery), reservations, POS, and receipts.
+  '''
+}
+
+// ----------------------------------------------------
+// ENUMS
+// ----------------------------------------------------
+
+Enum general_status {
+  active
+  inactive
+}
+
+Enum product_status {
+  available
+  unavailable
+}
+
+Enum reservation_status {
+  pending
+  confirmed
+  cancelled
+  completed
+}
+
+Enum order_type {
+  dine_in   [note: '1. Dine-in: Scan QR code on table and order']
+  takeaway  [note: '2. Takeaway: Customer orders and takes food away']
+  delivery  [note: '3. Delivery: Customer orders for home delivery']
+}
+
+Enum order_status {
+  pending
+  preparing
+  served
+  completed
+  cancelled
+}
+
+Enum payment_method {
+  cash
+  credit_card
+  debit_card
+  qr
+  online
+}
+
+Enum payment_status {
+  pending
+  completed
+  failed
+  refunded
+}
+
+Enum discount_type {
+  percentage
+  fixed
+}
+
+Enum review_status {
+  pending
+  approved
+  hidden
+}
+
+// ----------------------------------------------------
+// 1. RESTAURANTS & BRANCHES
+// ----------------------------------------------------
+
+Table restaurants {
+  id bigint [pk, increment]
+  name varchar(255) [not null]
+  description text [null]
+  phone varchar(50) [null]
+  email varchar(255) [null]
+  address text [null]
+  logo varchar(255) [null]
+  status general_status [default: 'active']
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Core restaurant business entity'
+}
+
+Table branches {
+  id bigint [pk, increment]
+  restaurant_id bigint [not null]
+  name varchar(255) [not null]
+  phone varchar(50) [null]
+  email varchar(255) [null]
+  address text [not null]
+  city varchar(100) [null]
+  opening_time time [null]
+  closing_time time [null]
+  status general_status [default: 'active']
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Restaurant physical branch locations'
+}
+
+// ----------------------------------------------------
+// 2. CATEGORIES & PRODUCTS
+// ----------------------------------------------------
+
+Table categories {
+  id bigint [pk, increment]
+  restaurant_id bigint [not null]
+  name varchar(255) [not null]
+  description text [null]
+  image varchar(255) [null]
+  status general_status [default: 'active']
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Product categories (Appetizers, Mains, Drinks, Desserts)'
+}
+
+Table products {
+  id bigint [pk, increment]
+  category_id bigint [not null]
+  name varchar(255) [not null]
+  description text [null]
+  price decimal(10,2) [not null]
+  image varchar(255) [null]
+  status product_status [default: 'available']
+  is_featured boolean [default: false]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Menu items and individual dishes/drinks'
+}
+
+Table image_items {
+  id bigint [pk, increment]
+  product_id bigint [not null]
+  image_url varchar(255) [not null]
+  caption varchar(255) [null]
+  is_primary boolean [default: false]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Multiple photo gallery for products'
+}
+
+// ----------------------------------------------------
+// 3. MENUS & MENU ITEMS
+// ----------------------------------------------------
+
+Table menus {
+  id bigint [pk, increment]
+  restaurant_id bigint [not null]
+  name varchar(255) [not null]
+  description text [null]
+  start_time time [null]
+  end_time time [null]
+  status general_status [default: 'active']
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Special menus (Breakfast, Lunch, Dinner, Happy Hour)'
+}
+
+Table menu_items {
+  id bigint [pk, increment]
+  menu_id bigint [not null]
+  product_id bigint [not null]
+  custom_price decimal(10,2) [null]
+  is_available boolean [default: true]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Pivot linking products into specific menus with custom pricing'
+}
+
+// ----------------------------------------------------
+// 4. RESERVATIONS
+// ----------------------------------------------------
+
+Table reservations {
+  id bigint [pk, increment]
+  branch_id bigint [not null]
+  table_number varchar(50) [null, note: 'Reserved table number or area preference']
+  customer_name varchar(255) [not null]
+  customer_phone varchar(50) [not null]
+  customer_email varchar(255) [null]
+  guest_count int [default: 1]
+  reservation_date date [not null]
+  reservation_time time [not null]
+  status reservation_status [default: 'pending']
+  special_requests text [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Table booking and reservations'
+}
+
+// ----------------------------------------------------
+// 5. ORDERS & ORDER ITEMS (3 E-Menu Order Types)
+// ----------------------------------------------------
+
+Table orders {
+  id bigint [pk, increment]
+  branch_id bigint [not null]
+  order_number varchar(255) [unique, not null]
+  order_type order_type [default: 'dine_in', note: '1. dine_in, 2. takeaway, 3. delivery']
+  table_number varchar(50) [null, note: 'For Dine-in: table number from QR scan or customer input']
+  customer_name varchar(255) [null, note: 'For Takeaway & Delivery']
+  customer_phone varchar(50) [null, note: 'For Takeaway & Delivery']
+  delivery_address text [null, note: 'For Delivery order only']
+  delivery_fee decimal(10,2) [default: 0, note: 'Delivery fee for delivery orders']
+  total_amount decimal(10,2) [default: 0]
+  discount_amount decimal(10,2) [default: 0]
+  final_amount decimal(10,2) [default: 0]
+  status order_status [default: 'pending']
+  notes text [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Customer orders: 1. Dine-in (QR Code on table), 2. Takeaway, 3. Delivery'
+}
+
+Table order_items {
+  id bigint [pk, increment]
+  order_id bigint [not null]
+  product_id bigint [not null]
+  quantity int [default: 1]
+  unit_price decimal(10,2) [not null]
+  subtotal decimal(10,2) [not null]
+  special_instructions text [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Line items within an order'
+}
+
+// ----------------------------------------------------
+// 6. PAYMENTS & RECEIPTS
+// ----------------------------------------------------
+
+Table payments {
+  id bigint [pk, increment]
+  order_id bigint [not null]
+  payment_method payment_method [default: 'cash']
+  amount decimal(10,2) [not null]
+  transaction_id varchar(255) [null]
+  status payment_status [default: 'pending']
+  paid_at timestamp [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Payment records and transactions per order'
+}
+
+Table receipts {
+  id bigint [pk, increment]
+  order_id bigint [unique, not null]
+  receipt_number varchar(100) [unique, not null]
+  total decimal(10,2) [not null]
+  issued_at timestamp [default: `now()`]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Final official receipts issued per completed order'
+}
+
+// ----------------------------------------------------
+// 7. PROMOTIONS & REVIEWS
+// ----------------------------------------------------
+
+Table promotions {
+  id bigint [pk, increment]
+  restaurant_id bigint [null]
+  title varchar(255) [not null]
+  description text [null]
+  discount_type discount_type [default: 'percentage']
+  discount_value decimal(10,2) [not null]
+  coupon_code varchar(50) [unique, null]
+  start_date datetime [not null]
+  end_date datetime [not null]
+  min_order_amount decimal(10,2) [null]
+  status general_status [default: 'active']
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Discount campaigns and coupon codes'
+}
+
+Table reviews {
+  id bigint [pk, increment]
+  restaurant_id bigint [null]
+  product_id bigint [null]
+  customer_name varchar(255) [null]
+  rating tinyint [default: 5, note: '1 to 5 stars']
+  comment text [null]
+  status review_status [default: 'approved']
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Customer reviews and ratings for restaurants or specific products'
+}
+
+// ----------------------------------------------------
+// 8. ROAD MAPS & PROFILES
+// ----------------------------------------------------
+
+Table road_maps {
+  id bigint [pk, increment]
+  image text [not null]
+  title varchar(255) [not null]
+  description text [not null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Project and restaurant road maps'
+}
+
+Table profiles {
+  id bigint [pk, increment]
+  image varchar(255) [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'User or general profile photo storage'
+}
+
+// ----------------------------------------------------
+// 9. USERS & SOCIAL ACCOUNTS
+// ----------------------------------------------------
+
+Table users {
+  id bigint [pk, increment]
+  name varchar(255) [not null]
+  email varchar(255) [unique, not null]
+  password varchar(255) [not null]
+  role_id int [default: 1]
+  email_verified_at timestamp [null]
+  remember_token varchar(100) [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'System users and administrators'
+}
+
+Table linked_google_accounts {
+  id bigint [pk, increment]
+  user_id bigint [not null]
+  provider_name varchar(50) [default: 'google']
+  provider_id varchar(255) [not null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'OAuth linked social accounts for Google login'
+}
+
+// ----------------------------------------------------
+// RELATIONSHIPS / FOREIGN KEYS
+// ----------------------------------------------------
+
+Ref: branches.restaurant_id > restaurants.id [delete: cascade]
+
+Ref: categories.restaurant_id > restaurants.id [delete: cascade]
+Ref: products.category_id > categories.id [delete: cascade]
+Ref: image_items.product_id > products.id [delete: cascade]
+
+Ref: menus.restaurant_id > restaurants.id [delete: cascade]
+Ref: menu_items.menu_id > menus.id [delete: cascade]
+Ref: menu_items.product_id > products.id [delete: cascade]
+
+Ref: reservations.branch_id > branches.id [delete: cascade]
+
+Ref: orders.branch_id > branches.id [delete: cascade]
+
+Ref: order_items.order_id > orders.id [delete: cascade]
+Ref: order_items.product_id > products.id [delete: cascade]
+
+Ref: payments.order_id > orders.id [delete: cascade]
+
+// 1-to-1: One order has exactly one final receipt
+Ref: receipts.order_id - orders.id [delete: cascade]
+
+Ref: promotions.restaurant_id > restaurants.id [delete: cascade]
+
+Ref: reviews.restaurant_id > restaurants.id [delete: cascade]
+Ref: reviews.product_id > products.id [delete: cascade]
+
+Ref: linked_google_accounts.user_id > users.id [delete: cascade]
+
+// ----------------------------------------------------
+// VISUAL TABLE GROUPS FOR DBDIAGRAM.IO
+// ----------------------------------------------------
+
+TableGroup organization {
+  restaurants
+  branches
+  users
+  linked_google_accounts
+  profiles
+}
+
+TableGroup catalog {
+  categories
+  products
+  image_items
+  menus
+  menu_items
+}
+
+TableGroup orders_and_pos {
+  reservations
+  orders
+  order_items
+  payments
+  receipts
+}
+
+TableGroup marketing_and_feedback {
+  promotions
+  reviews
+  road_maps
+}

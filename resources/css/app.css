@@ -1,0 +1,59 @@
+/* Restaurant Management System Design Tokens */
+:root {
+  --color-primary: #2563EB;     /* ពណ៌ចម្បង សម្រាប់ Buttons និង Navbar */
+  --color-secondary: #60A5FA;   /* ពណ៌បន្ទាប់បន្សំ */
+  --color-accent: #F59E0B;      /* ពណ៌ Highlight និង Badges */
+  --color-background: #F8FAFC;  /* ពណ៌ផ្ទៃខាងក្រោយ Website */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-background);
+  color: #0F172A;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Theme utility classes */
+.navbar-custom {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+}
+
+.btn-primary-custom {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.btn-primary-custom:hover {
+  background-color: #1D4ED8;
+}
+
+.badge-accent-custom {
+  background-color: var(--color-accent);
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  display: inline-block;
+}
+
+.border-secondary-custom {
+  border-color: var(--color-secondary);
+}
+
+.text-primary-custom {
+  color: var(--color-primary);
+}
+
+.text-accent-custom {
+  color: var(--color-accent);
+}
+
