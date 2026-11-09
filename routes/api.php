@@ -4,22 +4,22 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoogleLoginController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Api\RestaurantController;
-use App\Http\Controllers\Api\BranchController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\MenuController;
-use App\Http\Controllers\Api\MenuItemController;
-use App\Http\Controllers\Api\ImageItemController;
-use App\Http\Controllers\Api\ReservationController;
-use App\Http\Controllers\Api\OrderController;
-use App\Http\Controllers\Api\OrderItemController;
-use App\Http\Controllers\Api\PaymentController;
-use App\Http\Controllers\Api\ReceiptController;
-use App\Http\Controllers\Api\PromotionController;
-use App\Http\Controllers\Api\ReviewController;
-use App\Http\Controllers\Api\ColorStructureController;
-use App\Http\Controllers\Api\RoadMapController;
+use App\Http\Controllers\RestaurantController;
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\MenuController;
+use App\Http\Controllers\MenuItemController;
+use App\Http\Controllers\ImageItemController;
+use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OrderItemController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ReceiptController;
+use App\Http\Controllers\PromotionController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ColorStructureController;
+use App\Http\Controllers\RoadMapController;
 
 /*
 |--------------------------------------------------------------------------
