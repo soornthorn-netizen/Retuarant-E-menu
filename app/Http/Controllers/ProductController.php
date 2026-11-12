@@ -53,18 +53,23 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:150',
             'description' => 'nullable|string',
+            'base_price' => 'nullable|numeric|min:0',
             'price' => 'nullable|numeric|min:0',
             'image' => 'nullable|string|max:255',
             'is_available' => 'nullable|boolean',
-            'status' => 'nullable|string|in:available,unavailable',
             'is_featured' => 'nullable|boolean',
             'variants' => 'nullable|array',
-            'variants.*.name' => 'required_with:variants|string|max:255',
+            'variants.*.name' => 'required_with:variants|string|max:100',
             'variants.*.price' => 'required_with:variants|numeric|min:0',
             'variants.*.is_available' => 'nullable|boolean',
         ]);
+
+        if (isset($validated['price']) && !isset($validated['base_price'])) {
+            $validated['base_price'] = $validated['price'];
+        }
+        unset($validated['price']);
 
         $variants = $validated['variants'] ?? [];
         unset($validated['variants']);
@@ -124,18 +129,23 @@ class ProductController extends Controller
 
         $validated = $request->validate([
             'category_id' => 'sometimes|required|exists:categories,id',
-            'name' => 'sometimes|required|string|max:255',
+            'name' => 'sometimes|required|string|max:150',
             'description' => 'nullable|string',
+            'base_price' => 'nullable|numeric|min:0',
             'price' => 'nullable|numeric|min:0',
             'image' => 'nullable|string|max:255',
             'is_available' => 'nullable|boolean',
-            'status' => 'nullable|string|in:available,unavailable',
             'is_featured' => 'nullable|boolean',
             'variants' => 'nullable|array',
-            'variants.*.name' => 'required_with:variants|string|max:255',
+            'variants.*.name' => 'required_with:variants|string|max:100',
             'variants.*.price' => 'required_with:variants|numeric|min:0',
             'variants.*.is_available' => 'nullable|boolean',
         ]);
+
+        if (isset($validated['price']) && !isset($validated['base_price'])) {
+            $validated['base_price'] = $validated['price'];
+        }
+        unset($validated['price']);
 
         $variants = $validated['variants'] ?? null;
         unset($validated['variants']);

@@ -13,18 +13,33 @@ class Product extends Model
         'category_id',
         'name',
         'description',
-        'price',
+        'base_price',
         'image',
         'is_available',
-        'status',
         'is_featured',
     ];
 
     protected $casts = [
-        'price' => 'decimal:2',
+        'base_price' => 'decimal:2',
         'is_available' => 'boolean',
         'is_featured' => 'boolean',
     ];
+
+    /**
+     * Backward-compatibility accessor for price -> base_price
+     */
+    public function getPriceAttribute()
+    {
+        return $this->base_price;
+    }
+
+    /**
+     * Backward-compatibility mutator for price -> base_price
+     */
+    public function setPriceAttribute($value)
+    {
+        $this->attributes['base_price'] = $value;
+    }
 
     public function category()
     {
