@@ -15,18 +15,25 @@ class Product extends Model
         'description',
         'price',
         'image',
+        'is_available',
         'status',
         'is_featured',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'is_available' => 'boolean',
         'is_featured' => 'boolean',
     ];
 
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
     }
 
     public function menuItems()
@@ -49,4 +56,3 @@ class Product extends Model
         return $this->hasMany(Review::class);
     }
 }
-

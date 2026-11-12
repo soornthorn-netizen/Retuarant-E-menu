@@ -13,7 +13,7 @@ class OrderItemController extends Controller
      */
     public function index(Request $request)
     {
-        $query = OrderItem::with(['order', 'product']);
+        $query = OrderItem::with(['order', 'product', 'variant']);
 
         if ($request->has('order_id')) {
             $query->where('order_id', $request->order_id);
@@ -21,6 +21,10 @@ class OrderItemController extends Controller
 
         if ($request->has('product_id')) {
             $query->where('product_id', $request->product_id);
+        }
+
+        if ($request->has('product_variant_id')) {
+            $query->where('product_variant_id', $request->product_variant_id);
         }
 
         $orderItems = $query->paginate($request->get('per_page', 15));
@@ -39,6 +43,7 @@ class OrderItemController extends Controller
         $validated = $request->validate([
             'order_id' => 'required|exists:orders,id',
             'product_id' => 'required|exists:products,id',
+            'product_variant_id' => 'nullable|exists:product_variants,id',
             'quantity' => 'required|integer|min:1',
             'unit_price' => 'required|numeric|min:0',
             'special_instructions' => 'nullable|string',
@@ -51,7 +56,7 @@ class OrderItemController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order item created successfully',
-            'data' => $orderItem->load(['order', 'product']),
+            'data' => $orderItem->load(['order', 'product', 'variant']),
         ], 201);
     }
 
@@ -60,7 +65,7 @@ class OrderItemController extends Controller
      */
     public function show($id)
     {
-        $orderItem = OrderItem::with(['order', 'product'])->find($id);
+        $orderItem = OrderItem::with(['order', 'product', 'variant'])->find($id);
 
         if (!$orderItem) {
             return response()->json([
@@ -90,6 +95,9 @@ class OrderItemController extends Controller
         }
 
         $validated = $request->validate([
+            'order_id' => 'sometimes|required|exists:orders,id',
+            'product_id' => 'sometimes|required|exists:products,id',
+            'product_variant_id' => 'nullable|exists:product_variants,id',
             'quantity' => 'sometimes|required|integer|min:1',
             'unit_price' => 'sometimes|required|numeric|min:0',
             'special_instructions' => 'nullable|string',
@@ -104,7 +112,7 @@ class OrderItemController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order item updated successfully',
-            'data' => $orderItem->load(['order', 'product']),
+            'data' => $orderItem->load(['order', 'product', 'variant']),
         ]);
     }
 
@@ -130,4 +138,3 @@ class OrderItemController extends Controller
         ]);
     }
 }
-

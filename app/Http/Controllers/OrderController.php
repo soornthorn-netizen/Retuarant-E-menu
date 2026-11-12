@@ -14,7 +14,7 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Order::with(['branch', 'orderItems.product', 'payments', 'receipt']);
+        $query = Order::with(['branch', 'orderItems.product', 'orderItems.variant', 'payments', 'receipt']);
 
         if ($request->has('branch_id')) {
             $query->where('branch_id', $request->branch_id);
@@ -73,6 +73,7 @@ class OrderController extends Controller
             'notes' => 'nullable|string',
             'items' => 'nullable|array',
             'items.*.product_id' => 'required_with:items|exists:products,id',
+            'items.*.product_variant_id' => 'nullable|exists:product_variants,id',
             'items.*.quantity' => 'required_with:items|integer|min:1',
             'items.*.unit_price' => 'required_with:items|numeric|min:0',
             'items.*.special_instructions' => 'nullable|string',
@@ -112,6 +113,7 @@ class OrderController extends Controller
             foreach ($items as $item) {
                 $order->orderItems()->create([
                     'product_id' => $item['product_id'],
+                    'product_variant_id' => $item['product_variant_id'] ?? null,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'subtotal' => $item['quantity'] * $item['unit_price'],
@@ -123,7 +125,7 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order created successfully',
-            'data' => $order->load(['branch', 'orderItems.product']),
+            'data' => $order->load(['branch', 'orderItems.product', 'orderItems.variant']),
         ], 201);
     }
 
@@ -132,7 +134,7 @@ class OrderController extends Controller
      */
     public function show($id)
     {
-        $order = Order::with(['branch', 'orderItems.product', 'payments', 'receipt'])->find($id);
+        $order = Order::with(['branch', 'orderItems.product', 'orderItems.variant', 'payments', 'receipt'])->find($id);
 
         if (!$order) {
             return response()->json([
@@ -190,7 +192,7 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order updated successfully',
-            'data' => $order->load(['branch', 'orderItems.product', 'payments', 'receipt']),
+            'data' => $order->load(['branch', 'orderItems.product', 'orderItems.variant', 'payments', 'receipt']),
         ]);
     }
 

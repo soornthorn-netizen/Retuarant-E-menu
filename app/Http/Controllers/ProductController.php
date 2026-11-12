@@ -9,11 +9,11 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     /**
-     * Display a listing of products.
+     * Display a listing of products with variants.
      */
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'imageItems']);
+        $query = Product::with(['category', 'variants', 'imageItems']);
 
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
@@ -21,6 +21,10 @@ class ProductController extends Controller
 
         if ($request->has('is_featured')) {
             $query->where('is_featured', filter_var($request->is_featured, FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if ($request->has('is_available')) {
+            $query->where('is_available', filter_var($request->is_available, FILTER_VALIDATE_BOOLEAN));
         }
 
         if ($request->has('status')) {
@@ -43,7 +47,7 @@ class ProductController extends Controller
     }
 
     /**
-     * Store a newly created product.
+     * Store a newly created product (and optional variants).
      */
     public function store(Request $request)
     {
@@ -51,18 +55,36 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
+            'price' => 'nullable|numeric|min:0',
             'image' => 'nullable|string|max:255',
+            'is_available' => 'nullable|boolean',
             'status' => 'nullable|string|in:available,unavailable',
             'is_featured' => 'nullable|boolean',
+            'variants' => 'nullable|array',
+            'variants.*.name' => 'required_with:variants|string|max:255',
+            'variants.*.price' => 'required_with:variants|numeric|min:0',
+            'variants.*.is_available' => 'nullable|boolean',
         ]);
 
+        $variants = $validated['variants'] ?? [];
+        unset($validated['variants']);
+
         $product = Product::create($validated);
+
+        if (!empty($variants)) {
+            foreach ($variants as $variant) {
+                $product->variants()->create([
+                    'name' => $variant['name'],
+                    'price' => $variant['price'],
+                    'is_available' => $variant['is_available'] ?? true,
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Product created successfully',
-            'data' => $product->load('category'),
+            'data' => $product->load(['category', 'variants', 'imageItems']),
         ], 201);
     }
 
@@ -71,7 +93,7 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        $product = Product::with(['category', 'imageItems', 'menuItems', 'reviews'])->find($id);
+        $product = Product::with(['category', 'variants', 'imageItems', 'menuItems', 'reviews'])->find($id);
 
         if (!$product) {
             return response()->json([
@@ -104,18 +126,38 @@ class ProductController extends Controller
             'category_id' => 'sometimes|required|exists:categories,id',
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
-            'price' => 'sometimes|required|numeric|min:0',
+            'price' => 'nullable|numeric|min:0',
             'image' => 'nullable|string|max:255',
+            'is_available' => 'nullable|boolean',
             'status' => 'nullable|string|in:available,unavailable',
             'is_featured' => 'nullable|boolean',
+            'variants' => 'nullable|array',
+            'variants.*.name' => 'required_with:variants|string|max:255',
+            'variants.*.price' => 'required_with:variants|numeric|min:0',
+            'variants.*.is_available' => 'nullable|boolean',
         ]);
 
+        $variants = $validated['variants'] ?? null;
+        unset($validated['variants']);
+
         $product->update($validated);
+
+        // If variants array passed, recreate variants
+        if ($variants !== null) {
+            $product->variants()->delete();
+            foreach ($variants as $variant) {
+                $product->variants()->create([
+                    'name' => $variant['name'],
+                    'price' => $variant['price'],
+                    'is_available' => $variant['is_available'] ?? true,
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Product updated successfully',
-            'data' => $product->load('category'),
+            'data' => $product->load(['category', 'variants', 'imageItems']),
         ]);
     }
 
@@ -141,4 +183,3 @@ class ProductController extends Controller
         ]);
     }
 }
-

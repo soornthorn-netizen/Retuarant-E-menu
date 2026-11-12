@@ -129,14 +129,27 @@ Table products {
   category_id bigint [not null]
   name varchar(255) [not null]
   description text [null]
-  price decimal(10,2) [not null]
+  price decimal(10,2) [null, note: 'Base price (or defined by product_variants)']
   image varchar(255) [null]
+  is_available boolean [default: true, note: 'Whether product is currently available']
   status product_status [default: 'available']
   is_featured boolean [default: false]
   created_at timestamp [null]
   updated_at timestamp [null]
 
   Note: 'Menu items and individual dishes/drinks'
+}
+
+Table product_variants {
+  id bigint [pk, increment]
+  product_id bigint [not null]
+  name varchar(255) [not null, note: 'Variant option: e.g. Small, Large, Hot, Iced']
+  price decimal(10,2) [not null, note: 'Variant specific price']
+  is_available boolean [default: true]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Product options and prices (1:Many relationship with products)'
 }
 
 Table image_items {
@@ -232,6 +245,7 @@ Table order_items {
   id bigint [pk, increment]
   order_id bigint [not null]
   product_id bigint [not null]
+  product_variant_id bigint [null, note: 'Optional chosen product variant']
   quantity int [default: 1]
   unit_price decimal(10,2) [not null]
   subtotal decimal(10,2) [not null]
@@ -369,6 +383,7 @@ Ref: branches.restaurant_id > restaurants.id [delete: cascade]
 
 Ref: categories.restaurant_id > restaurants.id [delete: cascade]
 Ref: products.category_id > categories.id [delete: cascade]
+Ref: product_variants.product_id > products.id [delete: cascade]
 Ref: image_items.product_id > products.id [delete: cascade]
 
 Ref: menus.restaurant_id > restaurants.id [delete: cascade]
@@ -381,6 +396,7 @@ Ref: orders.branch_id > branches.id [delete: cascade]
 
 Ref: order_items.order_id > orders.id [delete: cascade]
 Ref: order_items.product_id > products.id [delete: cascade]
+Ref: order_items.product_variant_id > product_variants.id [delete: set null]
 
 Ref: payments.order_id > orders.id [delete: cascade]
 
@@ -409,6 +425,7 @@ TableGroup organization {
 TableGroup catalog {
   categories
   products
+  product_variants
   image_items
   menus
   menu_items

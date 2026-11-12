@@ -13,8 +13,9 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->decimal('price', 10, 2);
+            $table->decimal('price', 10, 2)->default(0);
             $table->string('image')->nullable();
+            $table->boolean('is_available')->default(true);
             $table->enum('status', ['available', 'unavailable'])->default('available');
             $table->boolean('is_featured')->default(false);
             $table->timestamps();
@@ -26,4 +27,3 @@ return new class extends Migration
         Schema::dropIfExists('products');
     }
 };
-
