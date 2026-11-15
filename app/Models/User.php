@@ -39,5 +39,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(LinkedGoogleAccount::class);
     }
+
+    public function luckyWheelSpins()
+    {
+        return $this->hasMany(LuckyWheelSpin::class);
+    }
 }
 

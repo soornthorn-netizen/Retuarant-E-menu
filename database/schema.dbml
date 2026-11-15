@@ -71,6 +71,14 @@ Enum review_status {
   hidden
 }
 
+Enum prize_type {
+  free_product
+  discount_percentage
+  discount_fixed
+  coupon
+  try_again
+}
+
 // ----------------------------------------------------
 // 1. RESTAURANTS & BRANCHES
 // ----------------------------------------------------
@@ -346,6 +354,51 @@ Table profiles {
 }
 
 // ----------------------------------------------------
+// 9. FOOD LUCKY WHEEL (SPINDINE)
+// ----------------------------------------------------
+
+Table lucky_wheel_prizes {
+  id bigint [pk, increment]
+  restaurant_id bigint [null]
+  title varchar(150) [not null, note: 'e.g. Free Drink, 10% Off, $2 Coupon']
+  description text [null]
+  prize_type prize_type [default: 'free_product']
+  discount_value decimal(10,2) [null]
+  product_id bigint [null, note: 'Referenced free item (Drink/Food)']
+  coupon_code varchar(50) [null]
+  probability int [default: 10, note: 'Winning probability weight']
+  slice_color varchar(30) [default: '#2563EB', note: 'Wheel slice color hex']
+  text_color varchar(30) [default: '#FFFFFF']
+  icon varchar(255) [null]
+  quantity int [null, note: 'Total available stock']
+  remaining_quantity int [null]
+  is_active boolean [default: true]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: '07. Food Lucky Wheel prizes and wheel slice configurations'
+}
+
+Table lucky_wheel_spins {
+  id bigint [pk, increment]
+  user_id bigint [null]
+  customer_name varchar(255) [null]
+  customer_phone varchar(50) [null]
+  restaurant_id bigint [null]
+  branch_id bigint [null]
+  prize_id bigint [not null]
+  redeem_code varchar(50) [unique, not null, note: 'e.g. SPIN-XXXXXX']
+  is_redeemed boolean [default: false]
+  redeemed_at timestamp [null]
+  expires_at timestamp [null]
+  notes text [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Spin records and reward redemption tracking'
+}
+
+// ----------------------------------------------------
 // 9. USERS & SOCIAL ACCOUNTS
 // ----------------------------------------------------
 
@@ -409,6 +462,14 @@ Ref: reviews.product_id > products.id [delete: cascade]
 
 Ref: linked_google_accounts.user_id > users.id [delete: cascade]
 
+Ref: lucky_wheel_prizes.restaurant_id > restaurants.id [delete: cascade]
+Ref: lucky_wheel_prizes.product_id > products.id [delete: set null]
+
+Ref: lucky_wheel_spins.user_id > users.id [delete: set null]
+Ref: lucky_wheel_spins.restaurant_id > restaurants.id [delete: cascade]
+Ref: lucky_wheel_spins.branch_id > branches.id [delete: cascade]
+Ref: lucky_wheel_spins.prize_id > lucky_wheel_prizes.id [delete: cascade]
+
 // ----------------------------------------------------
 // VISUAL TABLE GROUPS FOR DBDIAGRAM.IO
 // ----------------------------------------------------
@@ -442,4 +503,6 @@ TableGroup marketing_and_feedback {
   promotions
   reviews
   road_maps
+  lucky_wheel_prizes
+  lucky_wheel_spins
 }

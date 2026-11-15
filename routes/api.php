@@ -21,6 +21,9 @@ use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ColorStructureController;
 use App\Http\Controllers\RoadMapController;
+use App\Http\Controllers\LuckyWheelController;
+use App\Http\Controllers\LuckyWheelPrizeController;
+use App\Http\Controllers\LuckyWheelSpinController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +47,16 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // Color Structure / Theme API Endpoint
 Route::get('color-structure', [ColorStructureController::class, 'current']);
 Route::apiResource('color-structures', ColorStructureController::class);
+
+// 07. Food Lucky Wheel (Spin to win Coupon or Free Drink)
+Route::prefix('lucky-wheel')->group(function () {
+    Route::get('prizes', [LuckyWheelController::class, 'prizes']);
+    Route::post('spin', [LuckyWheelController::class, 'spin']);
+    Route::get('history', [LuckyWheelController::class, 'history']);
+    Route::post('redeem', [LuckyWheelController::class, 'redeem']);
+});
+Route::apiResource('lucky-wheel-prizes', LuckyWheelPrizeController::class);
+Route::apiResource('lucky-wheel-spins', LuckyWheelSpinController::class);
 
 // Restaurant Management System CRUD API Routes
 Route::apiResource('restaurants', RestaurantController::class);

@@ -35,4 +35,9 @@ class Branch extends Model
     {
         return $this->hasMany(Reservation::class);
     }
+
+    public function luckyWheelSpins()
+    {
+        return $this->hasMany(LuckyWheelSpin::class);
+    }
 }
