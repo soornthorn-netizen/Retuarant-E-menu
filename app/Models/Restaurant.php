@@ -53,5 +53,10 @@ class Restaurant extends Model
     {
         return $this->hasMany(LuckyWheelSpin::class);
     }
+
+    public function socialLinks()
+    {
+        return $this->hasMany(BusinessSocialLink::class, 'business_id');
+    }
 }
 

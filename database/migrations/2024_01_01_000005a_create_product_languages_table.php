@@ -8,19 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('image_items', function (Blueprint $table) {
+        Schema::create('product_languages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
-            $table->string('image_url');
-            $table->string('caption')->nullable();
-            $table->boolean('is_primary')->default(false);
+            $table->foreignId('language_id')->constrained('languages')->onDelete('cascade');
+            $table->string('name', 255);
+            $table->text('description')->nullable();
             $table->timestamps();
+
+            $table->unique(['product_id', 'language_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('image_items');
+        Schema::dropIfExists('product_languages');
     }
 };
-

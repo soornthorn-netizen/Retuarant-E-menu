@@ -55,3 +55,4 @@ class LuckyWheelPrize extends Model
         return $this->hasMany(LuckyWheelSpin::class, 'prize_id');
     }
 }
+

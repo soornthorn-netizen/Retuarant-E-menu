@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Promotion;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class PromotionController extends Controller
 {
@@ -14,19 +12,19 @@ class PromotionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Promotion::with('restaurant');
+        $query = Promotion::with(['restaurant', 'products', 'variations']);
 
         if ($request->has('restaurant_id')) {
             $query->where('restaurant_id', $request->restaurant_id);
         }
 
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
+        if ($request->has('is_active')) {
+            $query->where('is_active', filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN));
         }
 
-        if ($request->has('active_now')) {
+        if ($request->boolean('active_now')) {
             $now = now();
-            $query->where('status', 'active')
+            $query->where('is_active', true)
                   ->where('start_date', '<=', $now)
                   ->where('end_date', '>=', $now);
         }
@@ -46,15 +44,12 @@ class PromotionController extends Controller
     {
         $validated = $request->validate([
             'restaurant_id' => 'nullable|exists:restaurants,id',
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'discount_type' => 'required|string|in:percentage,fixed',
+            'name' => 'required|string|max:150',
+            'discount_type' => 'required|integer',
             'discount_value' => 'required|numeric|min:0',
-            'coupon_code' => 'nullable|string|max:50|unique:promotions,coupon_code',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'min_order_amount' => 'nullable|numeric|min:0',
-            'status' => 'nullable|string|in:active,inactive',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $promotion = Promotion::create($validated);
@@ -71,7 +66,7 @@ class PromotionController extends Controller
      */
     public function show($id)
     {
-        $promotion = Promotion::with('restaurant')->find($id);
+        $promotion = Promotion::with(['restaurant', 'products', 'variations'])->find($id);
 
         if (!$promotion) {
             return response()->json([
@@ -102,15 +97,12 @@ class PromotionController extends Controller
 
         $validated = $request->validate([
             'restaurant_id' => 'nullable|exists:restaurants,id',
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'discount_type' => 'sometimes|required|string|in:percentage,fixed',
+            'name' => 'sometimes|required|string|max:150',
+            'discount_type' => 'sometimes|required|integer',
             'discount_value' => 'sometimes|required|numeric|min:0',
-            'coupon_code' => ['nullable', 'string', 'max:50', Rule::unique('promotions')->ignore($promotion->id)],
             'start_date' => 'sometimes|required|date',
             'end_date' => 'sometimes|required|date|after_or_equal:start_date',
-            'min_order_amount' => 'nullable|numeric|min:0',
-            'status' => 'nullable|string|in:active,inactive',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $promotion->update($validated);
@@ -144,4 +136,3 @@ class PromotionController extends Controller
         ]);
     }
 }
-

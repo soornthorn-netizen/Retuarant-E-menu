@@ -10,11 +10,11 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('parent_id')->nullable()->constrained('categories')->onDelete('set null');
             $table->foreignId('restaurant_id')->nullable()->constrained('restaurants')->onDelete('cascade');
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->string('image')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->string('name', 150);
+            $table->string('image', 255)->nullable();
+            $table->string('slug', 255)->nullable();
             $table->timestamps();
         });
     }
@@ -24,4 +24,3 @@ return new class extends Migration
         Schema::dropIfExists('categories');
     }
 };
-

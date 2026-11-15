@@ -49,3 +49,4 @@ class LuckyWheelSpin extends Model
         return $this->belongsTo(LuckyWheelPrize::class, 'prize_id');
     }
 }
+

@@ -11,27 +11,34 @@ class Promotion extends Model
 
     protected $fillable = [
         'restaurant_id',
-        'title',
-        'description',
+        'name',
         'discount_type',
         'discount_value',
-        'coupon_code',
         'start_date',
         'end_date',
-        'min_order_amount',
-        'status',
+        'is_active',
     ];
 
     protected $casts = [
+        'discount_type' => 'integer',
         'discount_value' => 'decimal:2',
-        'min_order_amount' => 'decimal:2',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
+        'is_active' => 'boolean',
     ];
 
     public function restaurant()
     {
         return $this->belongsTo(Restaurant::class);
     }
-}
 
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    public function variations()
+    {
+        return $this->hasMany(ProductVariation::class);
+    }
+}

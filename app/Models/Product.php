@@ -12,43 +12,50 @@ class Product extends Model
     protected $fillable = [
         'category_id',
         'name',
-        'description',
-        'base_price',
+        'sku',
+        'code',
+        'price',
+        'tag',
+        'manage_stock',
+        'allow_stock_negative',
         'image',
-        'is_available',
-        'is_featured',
+        'promotion_id',
     ];
 
     protected $casts = [
-        'base_price' => 'decimal:2',
-        'is_available' => 'boolean',
-        'is_featured' => 'boolean',
+        'price' => 'decimal:3',
+        'manage_stock' => 'boolean',
+        'allow_stock_negative' => 'boolean',
     ];
-
-    /**
-     * Backward-compatibility accessor for price -> base_price
-     */
-    public function getPriceAttribute()
-    {
-        return $this->base_price;
-    }
-
-    /**
-     * Backward-compatibility mutator for price -> base_price
-     */
-    public function setPriceAttribute($value)
-    {
-        $this->attributes['base_price'] = $value;
-    }
 
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
 
-    public function variants()
+    public function promotion()
     {
-        return $this->hasMany(ProductVariant::class);
+        return $this->belongsTo(Promotion::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order', 'asc');
+    }
+
+    public function languages()
+    {
+        return $this->hasMany(ProductLanguage::class);
+    }
+
+    public function variations()
+    {
+        return $this->hasMany(ProductVariation::class);
+    }
+
+    public function options()
+    {
+        return $this->hasMany(ProductOption::class);
     }
 
     public function menuItems()
@@ -59,11 +66,6 @@ class Product extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
-    }
-
-    public function imageItems()
-    {
-        return $this->hasMany(ImageItem::class);
     }
 
     public function reviews()
