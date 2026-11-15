@@ -1,12 +1,12 @@
 // Database Markup Language (DBML) for dbdiagram.io
-// Project: Restaurant Management System
+// Project: Restaurant Management System (E-Menu & POS)
 // Target Database: MySQL / Laravel 10
 
 Project restaurant_management_system {
   database_type: 'MySQL'
   Note: '''
     # Restaurant Management System Database Schema
-    Designed for multi-branch restaurant management, E-Menu ordering (Dine-in, Takeaway, Delivery), reservations, POS, and receipts.
+    Enterprise E-Menu, Multilingual Product Catalog, Variations, Inventory, POS, Orders, and Marketing.
   '''
 }
 
@@ -60,22 +60,25 @@ Enum payment_status {
   refunded
 }
 
-Enum discount_type {
-  percentage
-  fixed
-}
-
 Enum review_status {
   pending
   approved
   hidden
 }
 
+Enum prize_type {
+  free_product
+  discount_percentage
+  discount_fixed
+  coupon
+  try_again
+}
+
 // ----------------------------------------------------
-// 1. RESTAURANTS & BRANCHES
+// 1. BUSINESSES / RESTAURANTS & BRANCHES
 // ----------------------------------------------------
 
-Table restaurants {
+Table businesses {
   id bigint [pk, increment]
   name varchar(255) [not null]
   description text [null]
@@ -92,7 +95,7 @@ Table restaurants {
 
 Table branches {
   id bigint [pk, increment]
-  restaurant_id bigint [not null]
+  business_id bigint [not null]
   name varchar(255) [not null]
   phone varchar(50) [null]
   email varchar(255) [null]
@@ -108,56 +111,187 @@ Table branches {
 }
 
 // ----------------------------------------------------
-// 2. CATEGORIES & PRODUCTS
+// 2. SOCIALS & BUSINESS SOCIAL LINKS
+// ----------------------------------------------------
+
+Table socials {
+  id bigint [pk, increment]
+  name varchar(100) [not null]
+  image varchar(255) [null]
+  created_at datetime [null]
+  updated_at datetime [null]
+
+  Note: 'Social platforms: Facebook, Telegram, TikTok, Instagram'
+}
+
+Table business_social_links {
+  id bigint [pk, increment]
+  business_id bigint [not null]
+  social_id bigint [not null]
+  value varchar(255) [not null]
+  created_at datetime [null]
+  updated_at datetime [null]
+
+  indexes {
+    (business_id, social_id) [unique]
+  }
+
+  Note: 'Social media profile handles & URLs per business'
+}
+
+// ----------------------------------------------------
+// 3. MULTILINGUAL & LOCALIZATION
+// ----------------------------------------------------
+
+Table languages {
+  id bigint [pk, increment]
+  name varchar(100) [not null]
+  code varchar(10) [unique, not null, note: 'e.g. en, km, zh']
+  created_at datetime [null]
+  updated_at datetime [null]
+
+  Note: 'Supported system languages'
+}
+
+// ----------------------------------------------------
+// 4. CATEGORIES & CATEGORY LANGUAGES
 // ----------------------------------------------------
 
 Table categories {
   id bigint [pk, increment]
-  restaurant_id bigint [not null]
-  name varchar(255) [not null]
-  description text [null]
+  parent_id bigint [null]
+  name varchar(150) [not null]
   image varchar(255) [null]
-  status general_status [default: 'active']
+  slug varchar(255) [null]
+  created_at datetime [null]
+  updated_at datetime [null]
+
+  Note: 'Hierarchical product categories with sub-categories'
+}
+
+Table category_languages {
+  id bigint [pk, increment]
+  category_id bigint [not null]
+  language_id bigint [not null]
+  name varchar(150) [not null]
+  created_at datetime [null]
+  updated_at datetime [null]
+
+  indexes {
+    (category_id, language_id) [unique]
+  }
+
+  Note: 'Translations of category names'
+}
+
+// ----------------------------------------------------
+// 5. PROMOTIONS
+// ----------------------------------------------------
+
+Table promotions {
+  id bigint [pk, increment]
+  name varchar(150) [not null]
+  discount_type int [default: 1, note: '1: Percentage, 2: Fixed amount']
+  discount_value decimal(12,2) [not null]
+  start_date datetime [not null]
+  end_date datetime [not null]
+  is_active boolean [default: true]
   created_at timestamp [null]
   updated_at timestamp [null]
 
-  Note: 'Product categories (Appetizers, Mains, Drinks, Desserts)'
+  Note: 'Promotions, campaign discounts, and promotional rules'
+}
+
+// ----------------------------------------------------
+// 6. UNIT TYPES, PRODUCTS, OPTIONS & VARIATIONS
+// ----------------------------------------------------
+
+Table unit_types {
+  id bigint [pk, increment]
+  name varchar(100) [not null, note: 'Cup, Glass, Plate, Bowl, Can, Bottle, Portion']
+
+  Note: 'Standard measurement and serving unit types'
 }
 
 Table products {
   id bigint [pk, increment]
-  category_id bigint [not null]
   name varchar(255) [not null]
-  description text [null]
-  price decimal(10,2) [not null]
+  sku varchar(100) [null]
+  code varchar(100) [null]
+  price decimal(12,3) [not null, default: 0]
+  tag varchar(100) [null]
+  manage_stock boolean [default: false]
+  allow_stock_negative boolean [default: false]
+  category_id bigint [not null]
   image varchar(255) [null]
-  status product_status [default: 'available']
-  is_featured boolean [default: false]
-  created_at timestamp [null]
-  updated_at timestamp [null]
+  promotion_id bigint [null]
+  created_at datetime [null]
+  updated_at datetime [null]
 
-  Note: 'Menu items and individual dishes/drinks'
+  Note: 'Products and menu items with inventory controls'
 }
 
-Table image_items {
+Table product_images {
   id bigint [pk, increment]
   product_id bigint [not null]
-  image_url varchar(255) [not null]
-  caption varchar(255) [null]
-  is_primary boolean [default: false]
-  created_at timestamp [null]
-  updated_at timestamp [null]
+  image varchar(255) [not null]
+  sort_order int [default: 0]
+  created_at datetime [null]
 
-  Note: 'Multiple photo gallery for products'
+  Note: 'Product photo gallery'
+}
+
+Table product_languages {
+  id bigint [pk, increment]
+  product_id bigint [not null]
+  language_id bigint [not null]
+  name varchar(255) [not null]
+  description text [null]
+
+  Note: 'Multilingual product name and description translations'
+}
+
+Table product_variations {
+  id bigint [pk, increment]
+  product_id bigint [not null]
+  name varchar(255) [not null]
+  product_unit_id bigint [null]
+  unit_type_id bigint [null]
+  is_multiplier boolean [default: false]
+  variant_group varchar(100) [null, note: 'e.g. Size, Ice, Sugar Level']
+  price decimal(12,3) [not null]
+  image varchar(255) [null]
+  tag varchar(100) [null]
+  promotion_id bigint [null]
+
+  Note: 'Product variants with distinct pricing, units, and tags'
+}
+
+Table product_variation_languages {
+  id bigint [pk, increment]
+  product_variation_id bigint [not null]
+  language_id bigint [not null]
+  name varchar(255) [not null]
+
+  Note: 'Multilingual translations for product variation names'
+}
+
+Table product_options {
+  id bigint [pk, increment]
+  product_id bigint [not null]
+  name varchar(150) [not null, note: 'e.g. Extra Cheese, Less Ice, No Spicy']
+  created_at datetime [null]
+
+  Note: 'Add-on modifier options per product'
 }
 
 // ----------------------------------------------------
-// 3. MENUS & MENU ITEMS
+// 7. MENUS & MENU ITEMS
 // ----------------------------------------------------
 
 Table menus {
   id bigint [pk, increment]
-  restaurant_id bigint [not null]
+  business_id bigint [not null]
   name varchar(255) [not null]
   description text [null]
   start_time time [null]
@@ -173,7 +307,7 @@ Table menu_items {
   id bigint [pk, increment]
   menu_id bigint [not null]
   product_id bigint [not null]
-  custom_price decimal(10,2) [null]
+  custom_price decimal(12,3) [null]
   is_available boolean [default: true]
   created_at timestamp [null]
   updated_at timestamp [null]
@@ -182,7 +316,7 @@ Table menu_items {
 }
 
 // ----------------------------------------------------
-// 4. RESERVATIONS
+// 8. RESERVATIONS
 // ----------------------------------------------------
 
 Table reservations {
@@ -204,7 +338,7 @@ Table reservations {
 }
 
 // ----------------------------------------------------
-// 5. ORDERS & ORDER ITEMS (3 E-Menu Order Types)
+// 9. ORDERS & ORDER ITEMS (3 E-Menu Order Types)
 // ----------------------------------------------------
 
 Table orders {
@@ -216,10 +350,10 @@ Table orders {
   customer_name varchar(255) [null, note: 'For Takeaway & Delivery']
   customer_phone varchar(50) [null, note: 'For Takeaway & Delivery']
   delivery_address text [null, note: 'For Delivery order only']
-  delivery_fee decimal(10,2) [default: 0, note: 'Delivery fee for delivery orders']
-  total_amount decimal(10,2) [default: 0]
-  discount_amount decimal(10,2) [default: 0]
-  final_amount decimal(10,2) [default: 0]
+  delivery_fee decimal(12,3) [default: 0, note: 'Delivery fee for delivery orders']
+  total_amount decimal(12,3) [default: 0]
+  discount_amount decimal(12,3) [default: 0]
+  final_amount decimal(12,3) [default: 0]
   status order_status [default: 'pending']
   notes text [null]
   created_at timestamp [null]
@@ -232,9 +366,10 @@ Table order_items {
   id bigint [pk, increment]
   order_id bigint [not null]
   product_id bigint [not null]
+  product_variation_id bigint [null, note: 'Selected variation']
   quantity int [default: 1]
-  unit_price decimal(10,2) [not null]
-  subtotal decimal(10,2) [not null]
+  unit_price decimal(12,3) [not null]
+  subtotal decimal(12,3) [not null]
   special_instructions text [null]
   created_at timestamp [null]
   updated_at timestamp [null]
@@ -243,14 +378,14 @@ Table order_items {
 }
 
 // ----------------------------------------------------
-// 6. PAYMENTS & RECEIPTS
+// 10. PAYMENTS & RECEIPTS
 // ----------------------------------------------------
 
 Table payments {
   id bigint [pk, increment]
   order_id bigint [not null]
   payment_method payment_method [default: 'cash']
-  amount decimal(10,2) [not null]
+  amount decimal(12,3) [not null]
   transaction_id varchar(255) [null]
   status payment_status [default: 'pending']
   paid_at timestamp [null]
@@ -264,7 +399,7 @@ Table receipts {
   id bigint [pk, increment]
   order_id bigint [unique, not null]
   receipt_number varchar(100) [unique, not null]
-  total decimal(10,2) [not null]
+  total decimal(12,3) [not null]
   issued_at timestamp [default: `now()`]
   created_at timestamp [null]
   updated_at timestamp [null]
@@ -273,30 +408,12 @@ Table receipts {
 }
 
 // ----------------------------------------------------
-// 7. PROMOTIONS & REVIEWS
+// 11. REVIEWS & ROAD MAPS & PROFILES
 // ----------------------------------------------------
-
-Table promotions {
-  id bigint [pk, increment]
-  restaurant_id bigint [null]
-  title varchar(255) [not null]
-  description text [null]
-  discount_type discount_type [default: 'percentage']
-  discount_value decimal(10,2) [not null]
-  coupon_code varchar(50) [unique, null]
-  start_date datetime [not null]
-  end_date datetime [not null]
-  min_order_amount decimal(10,2) [null]
-  status general_status [default: 'active']
-  created_at timestamp [null]
-  updated_at timestamp [null]
-
-  Note: 'Discount campaigns and coupon codes'
-}
 
 Table reviews {
   id bigint [pk, increment]
-  restaurant_id bigint [null]
+  business_id bigint [null]
   product_id bigint [null]
   customer_name varchar(255) [null]
   rating tinyint [default: 5, note: '1 to 5 stars']
@@ -305,12 +422,8 @@ Table reviews {
   created_at timestamp [null]
   updated_at timestamp [null]
 
-  Note: 'Customer reviews and ratings for restaurants or specific products'
+  Note: 'Customer reviews and ratings'
 }
-
-// ----------------------------------------------------
-// 8. ROAD MAPS & PROFILES
-// ----------------------------------------------------
 
 Table road_maps {
   id bigint [pk, increment]
@@ -333,7 +446,52 @@ Table profiles {
 }
 
 // ----------------------------------------------------
-// 9. USERS & SOCIAL ACCOUNTS
+// 12. FOOD LUCKY WHEEL
+// ----------------------------------------------------
+
+Table lucky_wheel_prizes {
+  id bigint [pk, increment]
+  business_id bigint [null]
+  title varchar(150) [not null, note: 'e.g. Free Drink, 10% Off, $2 Coupon']
+  description text [null]
+  prize_type prize_type [default: 'free_product']
+  discount_value decimal(12,2) [null]
+  product_id bigint [null, note: 'Referenced free item (Drink/Food)']
+  coupon_code varchar(50) [null]
+  probability int [default: 10, note: 'Winning probability weight']
+  slice_color varchar(30) [default: '#2563EB', note: 'Wheel slice color hex']
+  text_color varchar(30) [default: '#FFFFFF']
+  icon varchar(255) [null]
+  quantity int [null, note: 'Total available stock']
+  remaining_quantity int [null]
+  is_active boolean [default: true]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Food Lucky Wheel prizes and wheel slice configurations'
+}
+
+Table lucky_wheel_spins {
+  id bigint [pk, increment]
+  user_id bigint [null]
+  customer_name varchar(255) [null]
+  customer_phone varchar(50) [null]
+  business_id bigint [null]
+  branch_id bigint [null]
+  prize_id bigint [not null]
+  redeem_code varchar(50) [unique, not null, note: 'e.g. SPIN-XXXXXX']
+  is_redeemed boolean [default: false]
+  redeemed_at timestamp [null]
+  expires_at timestamp [null]
+  notes text [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Spin records and reward redemption tracking'
+}
+
+// ----------------------------------------------------
+// 13. USERS & SOCIAL ACCOUNTS
 // ----------------------------------------------------
 
 Table users {
@@ -365,32 +523,56 @@ Table linked_google_accounts {
 // RELATIONSHIPS / FOREIGN KEYS
 // ----------------------------------------------------
 
-Ref: branches.restaurant_id > restaurants.id [delete: cascade]
+Ref: branches.business_id > businesses.id [delete: cascade]
 
-Ref: categories.restaurant_id > restaurants.id [delete: cascade]
+Ref: business_social_links.business_id > businesses.id [delete: cascade]
+Ref: business_social_links.social_id > socials.id [delete: cascade]
+
+Ref: categories.parent_id > categories.id [delete: set null]
+Ref: category_languages.category_id > categories.id [delete: cascade]
+Ref: category_languages.language_id > languages.id [delete: cascade]
+
 Ref: products.category_id > categories.id [delete: cascade]
-Ref: image_items.product_id > products.id [delete: cascade]
+Ref: products.promotion_id > promotions.id [delete: set null]
 
-Ref: menus.restaurant_id > restaurants.id [delete: cascade]
+Ref: product_images.product_id > products.id [delete: cascade]
+
+Ref: product_languages.product_id > products.id [delete: cascade]
+Ref: product_languages.language_id > languages.id [delete: cascade]
+
+Ref: product_variations.product_id > products.id [delete: cascade]
+Ref: product_variations.unit_type_id > unit_types.id [delete: set null]
+Ref: product_variations.promotion_id > promotions.id [delete: set null]
+
+Ref: product_variation_languages.product_variation_id > product_variations.id [delete: cascade]
+Ref: product_variation_languages.language_id > languages.id [delete: cascade]
+
+Ref: product_options.product_id > products.id [delete: cascade]
+
+Ref: menus.business_id > businesses.id [delete: cascade]
 Ref: menu_items.menu_id > menus.id [delete: cascade]
 Ref: menu_items.product_id > products.id [delete: cascade]
 
 Ref: reservations.branch_id > branches.id [delete: cascade]
 
 Ref: orders.branch_id > branches.id [delete: cascade]
-
 Ref: order_items.order_id > orders.id [delete: cascade]
 Ref: order_items.product_id > products.id [delete: cascade]
+Ref: order_items.product_variation_id > product_variations.id [delete: set null]
 
 Ref: payments.order_id > orders.id [delete: cascade]
-
-// 1-to-1: One order has exactly one final receipt
 Ref: receipts.order_id - orders.id [delete: cascade]
 
-Ref: promotions.restaurant_id > restaurants.id [delete: cascade]
-
-Ref: reviews.restaurant_id > restaurants.id [delete: cascade]
+Ref: reviews.business_id > businesses.id [delete: cascade]
 Ref: reviews.product_id > products.id [delete: cascade]
+
+Ref: lucky_wheel_prizes.business_id > businesses.id [delete: cascade]
+Ref: lucky_wheel_prizes.product_id > products.id [delete: set null]
+
+Ref: lucky_wheel_spins.user_id > users.id [delete: set null]
+Ref: lucky_wheel_spins.business_id > businesses.id [delete: cascade]
+Ref: lucky_wheel_spins.branch_id > branches.id [delete: cascade]
+Ref: lucky_wheel_spins.prize_id > lucky_wheel_prizes.id [delete: cascade]
 
 Ref: linked_google_accounts.user_id > users.id [delete: cascade]
 
@@ -399,17 +581,26 @@ Ref: linked_google_accounts.user_id > users.id [delete: cascade]
 // ----------------------------------------------------
 
 TableGroup organization {
-  restaurants
+  businesses
   branches
+  socials
+  business_social_links
   users
   linked_google_accounts
   profiles
 }
 
-TableGroup catalog {
+TableGroup catalog_and_multilingual {
   categories
+  category_languages
+  languages
+  unit_types
   products
-  image_items
+  product_images
+  product_languages
+  product_options
+  product_variations
+  product_variation_languages
   menus
   menu_items
 }
@@ -422,8 +613,10 @@ TableGroup orders_and_pos {
   receipts
 }
 
-TableGroup marketing_and_feedback {
+TableGroup marketing_and_promotions {
   promotions
   reviews
   road_maps
+  lucky_wheel_prizes
+  lucky_wheel_spins
 }

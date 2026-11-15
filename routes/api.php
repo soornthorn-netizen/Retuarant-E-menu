@@ -7,10 +7,19 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CategoryLanguageController;
+use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\UnitTypeController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImageController;
+use App\Http\Controllers\ProductLanguageController;
+use App\Http\Controllers\ProductVariationController;
+use App\Http\Controllers\ProductVariationLanguageController;
+use App\Http\Controllers\ProductOptionController;
+use App\Http\Controllers\SocialController;
+use App\Http\Controllers\BusinessSocialLinkController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\MenuItemController;
-use App\Http\Controllers\ImageItemController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderItemController;
@@ -20,6 +29,9 @@ use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ColorStructureController;
 use App\Http\Controllers\RoadMapController;
+use App\Http\Controllers\LuckyWheelController;
+use App\Http\Controllers\LuckyWheelPrizeController;
+use App\Http\Controllers\LuckyWheelSpinController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,14 +56,41 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('color-structure', [ColorStructureController::class, 'current']);
 Route::apiResource('color-structures', ColorStructureController::class);
 
+// 07. Food Lucky Wheel (Spin to win Coupon or Free Drink)
+Route::prefix('lucky-wheel')->group(function () {
+    Route::get('prizes', [LuckyWheelController::class, 'prizes']);
+    Route::post('spin', [LuckyWheelController::class, 'spin']);
+    Route::get('history', [LuckyWheelController::class, 'history']);
+    Route::post('redeem', [LuckyWheelController::class, 'redeem']);
+});
+Route::apiResource('lucky-wheel-prizes', LuckyWheelPrizeController::class);
+Route::apiResource('lucky-wheel-spins', LuckyWheelSpinController::class);
+
+// Multilingual & Socials
+Route::apiResource('languages', LanguageController::class);
+Route::apiResource('socials', SocialController::class);
+Route::apiResource('business-social-links', BusinessSocialLinkController::class);
+
+// Categories & Category Languages
+Route::apiResource('categories', CategoryController::class);
+Route::apiResource('category-languages', CategoryLanguageController::class);
+
+// Unit Types
+Route::apiResource('unit-types', UnitTypeController::class);
+
+// Products, Options, Images, Variations & Languages
+Route::apiResource('products', ProductController::class);
+Route::apiResource('product-images', ProductImageController::class);
+Route::apiResource('product-languages', ProductLanguageController::class);
+Route::apiResource('product-variations', ProductVariationController::class);
+Route::apiResource('product-variation-languages', ProductVariationLanguageController::class);
+Route::apiResource('product-options', ProductOptionController::class);
+
 // Restaurant Management System CRUD API Routes
 Route::apiResource('restaurants', RestaurantController::class);
 Route::apiResource('branches', BranchController::class);
-Route::apiResource('categories', CategoryController::class);
-Route::apiResource('products', ProductController::class);
 Route::apiResource('menus', MenuController::class);
 Route::apiResource('menu-items', MenuItemController::class);
-Route::apiResource('image-items', ImageItemController::class);
 Route::apiResource('reservations', ReservationController::class);
 Route::apiResource('orders', OrderController::class);
 Route::apiResource('order-items', OrderItemController::class);

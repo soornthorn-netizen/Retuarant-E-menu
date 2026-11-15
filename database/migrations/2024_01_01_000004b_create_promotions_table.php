@@ -11,15 +11,12 @@ return new class extends Migration
         Schema::create('promotions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('restaurant_id')->nullable()->constrained('restaurants')->onDelete('cascade');
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->enum('discount_type', ['percentage', 'fixed'])->default('percentage');
-            $table->decimal('discount_value', 10, 2);
-            $table->string('coupon_code', 50)->unique()->nullable();
+            $table->string('name', 150);
+            $table->integer('discount_type')->default(1); // 1 = percentage, 2 = fixed
+            $table->decimal('discount_value', 12, 2);
             $table->dateTime('start_date');
             $table->dateTime('end_date');
-            $table->decimal('min_order_amount', 10, 2)->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

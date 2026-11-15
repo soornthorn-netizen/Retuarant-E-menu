@@ -12,9 +12,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+            $table->foreignId('product_variation_id')->nullable()->constrained('product_variations')->onDelete('set null');
             $table->integer('quantity')->default(1);
-            $table->decimal('unit_price', 10, 2);
-            $table->decimal('subtotal', 10, 2);
+            $table->decimal('unit_price', 12, 3);
+            $table->decimal('subtotal', 12, 3);
             $table->text('special_instructions')->nullable();
             $table->timestamps();
         });
@@ -25,4 +26,3 @@ return new class extends Migration
         Schema::dropIfExists('order_items');
     }
 };
-
