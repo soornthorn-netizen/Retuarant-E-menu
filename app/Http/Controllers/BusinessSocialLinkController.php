@@ -73,3 +73,4 @@ class BusinessSocialLinkController extends Controller
         return response()->json(['success' => true, 'message' => 'Social link deleted']);
     }
 }
+

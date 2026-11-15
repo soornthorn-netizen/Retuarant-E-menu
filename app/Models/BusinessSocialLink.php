@@ -25,3 +25,4 @@ class BusinessSocialLink extends Model
         return $this->belongsTo(Social::class);
     }
 }
+

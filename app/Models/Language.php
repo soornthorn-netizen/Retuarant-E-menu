@@ -29,3 +29,4 @@ class Language extends Model
         return $this->hasMany(ProductVariationLanguage::class);
     }
 }
+

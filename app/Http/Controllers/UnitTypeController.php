@@ -58,3 +58,4 @@ class UnitTypeController extends Controller
         return response()->json(['success' => true, 'message' => 'Unit type deleted']);
     }
 }
+

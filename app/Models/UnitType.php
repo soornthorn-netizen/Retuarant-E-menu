@@ -18,3 +18,4 @@ class UnitType extends Model
         return $this->hasMany(ProductVariation::class);
     }
 }
+

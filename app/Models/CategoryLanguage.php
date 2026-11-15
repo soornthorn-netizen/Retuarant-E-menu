@@ -25,3 +25,4 @@ class CategoryLanguage extends Model
         return $this->belongsTo(Language::class);
     }
 }
+

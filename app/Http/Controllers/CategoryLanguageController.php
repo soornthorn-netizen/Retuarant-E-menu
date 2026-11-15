@@ -73,3 +73,4 @@ class CategoryLanguageController extends Controller
         return response()->json(['success' => true, 'message' => 'Deleted successfully']);
     }
 }
+

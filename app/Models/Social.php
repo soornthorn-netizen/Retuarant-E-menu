@@ -19,3 +19,4 @@ class Social extends Model
         return $this->hasMany(BusinessSocialLink::class);
     }
 }
+

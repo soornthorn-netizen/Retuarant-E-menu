@@ -59,3 +59,4 @@ class SocialController extends Controller
         return response()->json(['success' => true, 'message' => 'Social platform deleted']);
     }
 }
+
