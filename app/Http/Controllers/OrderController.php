@@ -14,10 +14,14 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Order::with(['branch', 'orderItems.product', 'orderItems.variant', 'payments', 'receipt']);
+        $query = Order::with(['branch', 'tableSession.diningTable', 'orderItems.product', 'orderItems.variant', 'payments', 'receipt']);
 
         if ($request->has('branch_id')) {
             $query->where('branch_id', $request->branch_id);
+        }
+
+        if ($request->has('table_session_id')) {
+            $query->where('table_session_id', $request->table_session_id);
         }
 
         if ($request->has('status')) {
@@ -60,12 +64,14 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'branch_id' => 'required|exists:branches,id',
+            'table_session_id' => 'nullable|exists:table_sessions,id',
             'order_type' => 'required|string|in:dine_in,takeaway,delivery',
             'table_number' => 'nullable|string|max:50',
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:50',
             'delivery_address' => 'nullable|string',
             'delivery_fee' => 'nullable|numeric|min:0',
+            'total' => 'nullable|numeric|min:0',
             'total_amount' => 'nullable|numeric|min:0',
             'discount_amount' => 'nullable|numeric|min:0',
             'final_amount' => 'nullable|numeric|min:0',
@@ -85,6 +91,14 @@ class OrderController extends Controller
             ? ($validated['delivery_fee'] ?? 0)
             : 0;
 
+        // Auto-fill table_number from table session if not provided
+        if (!empty($validated['table_session_id']) && empty($validated['table_number'])) {
+            $session = \App\Models\TableSession::with('diningTable')->find($validated['table_session_id']);
+            if ($session && $session->diningTable) {
+                $validated['table_number'] = $session->diningTable->table_number;
+            }
+        }
+
         $items = $validated['items'] ?? [];
         unset($validated['items']);
 
@@ -95,11 +109,14 @@ class OrderController extends Controller
                 $total += $item['quantity'] * $item['unit_price'];
             }
             $validated['total_amount'] = $total;
+            $validated['total'] = $validated['total'] ?? $total;
             $discount = $validated['discount_amount'] ?? 0;
             $deliveryFee = $validated['delivery_fee'] ?? 0;
             $validated['final_amount'] = max(0, $total + $deliveryFee - $discount);
         } else {
-            $total = $validated['total_amount'] ?? 0;
+            $total = $validated['total_amount'] ?? ($validated['total'] ?? 0);
+            $validated['total'] = $validated['total'] ?? $total;
+            $validated['total_amount'] = $total;
             $discount = $validated['discount_amount'] ?? 0;
             $deliveryFee = $validated['delivery_fee'] ?? 0;
             if (!isset($validated['final_amount'])) {
@@ -125,7 +142,7 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order created successfully',
-            'data' => $order->load(['branch', 'orderItems.product', 'orderItems.variant']),
+            'data' => $order->load(['branch', 'tableSession.diningTable', 'orderItems.product', 'orderItems.variant']),
         ], 201);
     }
 
@@ -134,7 +151,7 @@ class OrderController extends Controller
      */
     public function show($id)
     {
-        $order = Order::with(['branch', 'orderItems.product', 'orderItems.variant', 'payments', 'receipt'])->find($id);
+        $order = Order::with(['branch', 'tableSession.diningTable', 'orderItems.product', 'orderItems.variant', 'payments', 'receipt'])->find($id);
 
         if (!$order) {
             return response()->json([
@@ -165,18 +182,26 @@ class OrderController extends Controller
 
         $validated = $request->validate([
             'branch_id' => 'sometimes|required|exists:branches,id',
+            'table_session_id' => 'nullable|exists:table_sessions,id',
             'order_type' => 'nullable|string|in:dine_in,takeaway,delivery',
             'table_number' => 'nullable|string|max:50',
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:50',
             'delivery_address' => 'nullable|string',
             'delivery_fee' => 'nullable|numeric|min:0',
+            'total' => 'nullable|numeric|min:0',
             'total_amount' => 'nullable|numeric|min:0',
             'discount_amount' => 'nullable|numeric|min:0',
             'final_amount' => 'nullable|numeric|min:0',
             'status' => 'nullable|string|in:pending,preparing,served,completed,cancelled',
             'notes' => 'nullable|string',
         ]);
+
+        if (isset($validated['total']) && !isset($validated['total_amount'])) {
+            $validated['total_amount'] = $validated['total'];
+        } elseif (isset($validated['total_amount']) && !isset($validated['total'])) {
+            $validated['total'] = $validated['total_amount'];
+        }
 
         if (isset($validated['total_amount']) || isset($validated['discount_amount']) || isset($validated['delivery_fee'])) {
             $total = $validated['total_amount'] ?? $order->total_amount;
@@ -192,7 +217,7 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Order updated successfully',
-            'data' => $order->load(['branch', 'orderItems.product', 'orderItems.variant', 'payments', 'receipt']),
+            'data' => $order->load(['branch', 'tableSession.diningTable', 'orderItems.product', 'orderItems.variant', 'payments', 'receipt']),
         ]);
     }
 

@@ -16,6 +16,7 @@ class Order extends Model
 
     protected $fillable = [
         'branch_id',
+        'table_session_id',
         'order_number',
         'order_type',
         'table_number',
@@ -23,6 +24,7 @@ class Order extends Model
         'customer_phone',
         'delivery_address',
         'delivery_fee',
+        'total',
         'total_amount',
         'discount_amount',
         'final_amount',
@@ -32,6 +34,7 @@ class Order extends Model
 
     protected $casts = [
         'delivery_fee' => 'decimal:2',
+        'total' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'final_amount' => 'decimal:2',
@@ -40,6 +43,11 @@ class Order extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function tableSession()
+    {
+        return $this->belongsTo(TableSession::class, 'table_session_id');
     }
 
     public function orderItems()

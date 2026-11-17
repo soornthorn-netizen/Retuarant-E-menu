@@ -337,6 +337,31 @@ Table reservations {
   Note: 'Table booking and reservations'
 }
 
+Table dining_tables {
+  id bigint [pk, increment]
+  branch_id bigint [null]
+  table_number varchar(50) [not null]
+  capacity int [default: 4]
+  status varchar(50) [default: 'available', note: 'available, occupied, reserved, maintenance']
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Restaurant dining tables'
+}
+
+Table table_sessions {
+  id bigint [pk, increment]
+  dining_table_id bigint [not null]
+  session_token varchar(255) [unique, not null, note: 'Unique session token for table QR scanning and guest stay']
+  status varchar(50) [default: 'active', note: 'active, closed, completed, cancelled']
+  opened_at datetime [null]
+  closed_at datetime [null]
+  created_at timestamp [null]
+  updated_at timestamp [null]
+
+  Note: 'Active dining sessions opened per table'
+}
+
 // ----------------------------------------------------
 // 9. ORDERS & ORDER ITEMS (3 E-Menu Order Types)
 // ----------------------------------------------------
@@ -344,6 +369,7 @@ Table reservations {
 Table orders {
   id bigint [pk, increment]
   branch_id bigint [not null]
+  table_session_id bigint [null, note: 'Associated table session for dine-in']
   order_number varchar(255) [unique, not null]
   order_type order_type [default: 'dine_in', note: '1. dine_in, 2. takeaway, 3. delivery']
   table_number varchar(50) [null, note: 'For Dine-in: table number from QR scan or customer input']
@@ -351,6 +377,7 @@ Table orders {
   customer_phone varchar(50) [null, note: 'For Takeaway & Delivery']
   delivery_address text [null, note: 'For Delivery order only']
   delivery_fee decimal(12,3) [default: 0, note: 'Delivery fee for delivery orders']
+  total decimal(12,3) [default: 0]
   total_amount decimal(12,3) [default: 0]
   discount_amount decimal(12,3) [default: 0]
   final_amount decimal(12,3) [default: 0]
@@ -555,6 +582,10 @@ Ref: menu_items.product_id > products.id [delete: cascade]
 
 Ref: reservations.branch_id > branches.id [delete: cascade]
 
+Ref: dining_tables.branch_id > branches.id [delete: cascade]
+Ref: table_sessions.dining_table_id > dining_tables.id [delete: cascade]
+Ref: orders.table_session_id > table_sessions.id [delete: set null]
+
 Ref: orders.branch_id > branches.id [delete: cascade]
 Ref: order_items.order_id > orders.id [delete: cascade]
 Ref: order_items.product_id > products.id [delete: cascade]
@@ -606,6 +637,8 @@ TableGroup catalog_and_multilingual {
 }
 
 TableGroup orders_and_pos {
+  dining_tables
+  table_sessions
   reservations
   orders
   order_items

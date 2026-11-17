@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
+            $table->foreignId('table_session_id')->nullable()->constrained('table_sessions')->nullOnDelete();
             $table->string('order_number')->unique();
             $table->enum('order_type', ['dine_in', 'takeaway', 'delivery'])->default('dine_in');
             $table->string('table_number', 50)->nullable();
@@ -18,6 +19,7 @@ return new class extends Migration
             $table->string('customer_phone', 50)->nullable();
             $table->text('delivery_address')->nullable();
             $table->decimal('delivery_fee', 10, 2)->default(0);
+            $table->decimal('total', 10, 2)->default(0);
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->decimal('discount_amount', 10, 2)->default(0);
             $table->decimal('final_amount', 10, 2)->default(0);

@@ -21,6 +21,8 @@ use App\Http\Controllers\BusinessSocialLinkController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\MenuItemController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\DiningTableController;
+use App\Http\Controllers\TableSessionController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\PaymentController;
@@ -92,6 +94,16 @@ Route::apiResource('branches', BranchController::class);
 Route::apiResource('menus', MenuController::class);
 Route::apiResource('menu-items', MenuItemController::class);
 Route::apiResource('reservations', ReservationController::class);
+
+// Dining Tables & Table Sessions (QR scan & Dine-in sessions)
+Route::get('dining-tables/{dining_table}/active-session', [DiningTableController::class, 'activeSession']);
+Route::post('dining-tables/{dining_table}/open-session', [DiningTableController::class, 'openSession']);
+Route::apiResource('dining-tables', DiningTableController::class);
+
+Route::post('table-sessions/{table_session}/close', [TableSessionController::class, 'closeSession']);
+Route::get('table-sessions/{table_session}/orders', [TableSessionController::class, 'orders']);
+Route::apiResource('table-sessions', TableSessionController::class);
+
 Route::apiResource('orders', OrderController::class);
 Route::apiResource('order-items', OrderItemController::class);
 Route::apiResource('payments', PaymentController::class);
