@@ -518,19 +518,55 @@ Table lucky_wheel_spins {
 }
 
 // ----------------------------------------------------
-// 13. USERS & SOCIAL ACCOUNTS
+// 13. RBAC (ROLES & PERMISSIONS), USERS & SOCIAL ACCOUNTS
 // ----------------------------------------------------
+
+Table roles {
+  id bigint [pk, increment]
+  name varchar(100) [unique, not null]
+  description text [null]
+  is_active boolean [default: true]
+  created_at datetime [null]
+  updated_at datetime [null]
+
+  Note: 'Role definitions (Super Admin, Manager, Cashier, Waiter, Customer)'
+}
+
+Table permissions {
+  id bigint [pk, increment]
+  name varchar(100) [not null]
+  code varchar(100) [unique, not null]
+  module varchar(100) [null]
+  description text [null]
+  created_at datetime [null]
+  updated_at datetime [null]
+
+  Note: 'Granular system capability permissions'
+}
+
+Table role_permissions {
+  id bigint [pk, increment]
+  role_id bigint [not null]
+  permission_id bigint [not null]
+  created_at datetime [null]
+
+  indexes {
+    (role_id, permission_id) [unique]
+  }
+
+  Note: 'Pivot table assigning permissions to roles'
+}
 
 Table users {
   id bigint [pk, increment]
-  name varchar(255) [not null]
+  role_id bigint [null]
+  name varchar(150) [not null]
   email varchar(255) [unique, not null]
   password varchar(255) [not null]
-  role_id int [default: 1]
-  email_verified_at timestamp [null]
-  remember_token varchar(100) [null]
-  created_at timestamp [null]
-  updated_at timestamp [null]
+  phone varchar(30) [null]
+  is_active boolean [default: true]
+  created_at datetime [null]
+  updated_at datetime [null]
 
   Note: 'System users and administrators'
 }
@@ -607,6 +643,10 @@ Ref: lucky_wheel_spins.prize_id > lucky_wheel_prizes.id [delete: cascade]
 
 Ref: linked_google_accounts.user_id > users.id [delete: cascade]
 
+Ref: users.role_id > roles.id [delete: set null]
+Ref: role_permissions.role_id > roles.id [delete: cascade]
+Ref: role_permissions.permission_id > permissions.id [delete: cascade]
+
 // ----------------------------------------------------
 // VISUAL TABLE GROUPS FOR DBDIAGRAM.IO
 // ----------------------------------------------------
@@ -616,6 +656,9 @@ TableGroup organization {
   branches
   socials
   business_social_links
+  roles
+  permissions
+  role_permissions
   users
   linked_google_accounts
   profiles

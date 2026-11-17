@@ -4,6 +4,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoogleLoginController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CategoryController;
@@ -51,8 +55,15 @@ Route::post('auth/google/login', [GoogleLoginController::class, 'login']);
 Route::post('auth/social/login', [GoogleLoginController::class, 'login']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user()->load('linkedSocialAccounts');
+    return $request->user()->load(['role.permissions', 'linkedSocialAccounts']);
 });
+
+// RBAC & User Management
+Route::post('roles/{role}/sync-permissions', [RoleController::class, 'syncPermissions']);
+Route::apiResource('roles', RoleController::class);
+Route::apiResource('permissions', PermissionController::class);
+Route::apiResource('role-permissions', RolePermissionController::class);
+Route::apiResource('users', UserController::class);
 
 // Color Structure / Theme API Endpoint
 Route::get('color-structure', [ColorStructureController::class, 'current']);

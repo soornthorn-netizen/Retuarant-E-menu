@@ -12,12 +12,14 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
+        'role_id',
         'name',
         'email',
         'password',
-        'role',
         'phone',
+        'role',
         'avatar',
+        'is_active',
     ];
 
     protected $hidden = [
@@ -28,7 +30,32 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_active' => 'boolean',
     ];
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    public function roleRelation()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    public function hasRole(string $roleName): bool
+    {
+        return $this->role?->name === $roleName || $this->role === $roleName;
+    }
+
+    public function hasPermission(string $code): bool
+    {
+        if (!$this->role_id) {
+            return false;
+        }
+
+        return $this->roleRelation?->permissions()->where('code', $code)->exists() ?? false;
+    }
 
     public function linkedSocialAccounts()
     {
