@@ -9,14 +9,23 @@ return new class extends Migration
     public function up(): void
     {
         if (Schema::hasTable('users')) {
-            Schema::table('users', function (Blueprint $table) {
-                if (!Schema::hasColumn('users', 'role_id')) {
-                    $table->foreignId('role_id')->nullable()->after('id')->constrained('roles')->nullOnDelete();
-                }
-                if (!Schema::hasColumn('users', 'is_active')) {
-                    $table->boolean('is_active')->default(true)->after('phone');
-                }
-            });
+            $hasRoleId = Schema::hasColumn('users', 'role_id');
+            $hasIsActive = Schema::hasColumn('users', 'is_active');
+            $hasPhone = Schema::hasColumn('users', 'phone');
+
+            if (!$hasRoleId || !$hasIsActive || !$hasPhone) {
+                Schema::table('users', function (Blueprint $table) use ($hasRoleId, $hasIsActive, $hasPhone) {
+                    if (!$hasRoleId) {
+                        $table->foreignId('role_id')->nullable()->constrained('roles')->nullOnDelete();
+                    }
+                    if (!$hasPhone) {
+                        $table->string('phone', 30)->nullable();
+                    }
+                    if (!$hasIsActive) {
+                        $table->boolean('is_active')->default(true);
+                    }
+                });
+            }
         }
     }
 

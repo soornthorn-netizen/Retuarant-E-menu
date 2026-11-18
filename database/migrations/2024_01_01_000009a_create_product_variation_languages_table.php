@@ -8,6 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::dropIfExists('product_variation_languages');
+
         Schema::create('product_variation_languages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_variation_id')->constrained('product_variations')->onDelete('cascade');
@@ -15,7 +17,7 @@ return new class extends Migration
             $table->string('name', 255);
             $table->timestamps();
 
-            $table->unique(['product_variation_id', 'language_id']);
+            $table->unique(['product_variation_id', 'language_id'], 'prod_var_lang_unique');
         });
     }
 
@@ -24,4 +26,3 @@ return new class extends Migration
         Schema::dropIfExists('product_variation_languages');
     }
 };
-

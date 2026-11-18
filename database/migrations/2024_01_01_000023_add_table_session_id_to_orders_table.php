@@ -9,14 +9,19 @@ return new class extends Migration
     public function up(): void
     {
         if (Schema::hasTable('orders')) {
-            Schema::table('orders', function (Blueprint $table) {
-                if (!Schema::hasColumn('orders', 'table_session_id')) {
-                    $table->foreignId('table_session_id')->nullable()->after('branch_id')->constrained('table_sessions')->nullOnDelete();
-                }
-                if (!Schema::hasColumn('orders', 'total')) {
-                    $table->decimal('total', 10, 2)->default(0)->after('delivery_fee');
-                }
-            });
+            $hasSession = Schema::hasColumn('orders', 'table_session_id');
+            $hasTotal = Schema::hasColumn('orders', 'total');
+
+            if (!$hasSession || !$hasTotal) {
+                Schema::table('orders', function (Blueprint $table) use ($hasSession, $hasTotal) {
+                    if (!$hasSession) {
+                        $table->foreignId('table_session_id')->nullable()->constrained('table_sessions')->nullOnDelete();
+                    }
+                    if (!$hasTotal) {
+                        $table->decimal('total', 10, 2)->default(0);
+                    }
+                });
+            }
         }
     }
 
