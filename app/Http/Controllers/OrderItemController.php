@@ -43,12 +43,15 @@ class OrderItemController extends Controller
         $validated = $request->validate([
             'order_id' => 'required|exists:orders,id',
             'product_id' => 'required|exists:products,id',
-            'product_variant_id' => 'nullable|exists:product_variants,id',
+            'product_variation_id' => 'nullable|exists:product_variations,id',
+            'product_variant_id' => 'nullable|exists:product_variations,id',
             'quantity' => 'required|integer|min:1',
             'unit_price' => 'required|numeric|min:0',
             'special_instructions' => 'nullable|string',
         ]);
 
+        $validated['product_variation_id'] = $validated['product_variation_id'] ?? $validated['product_variant_id'] ?? null;
+        unset($validated['product_variant_id']);
         $validated['subtotal'] = $validated['quantity'] * $validated['unit_price'];
 
         $orderItem = OrderItem::create($validated);
@@ -97,11 +100,17 @@ class OrderItemController extends Controller
         $validated = $request->validate([
             'order_id' => 'sometimes|required|exists:orders,id',
             'product_id' => 'sometimes|required|exists:products,id',
-            'product_variant_id' => 'nullable|exists:product_variants,id',
+            'product_variation_id' => 'nullable|exists:product_variations,id',
+            'product_variant_id' => 'nullable|exists:product_variations,id',
             'quantity' => 'sometimes|required|integer|min:1',
             'unit_price' => 'sometimes|required|numeric|min:0',
             'special_instructions' => 'nullable|string',
         ]);
+
+        if (array_key_exists('product_variant_id', $validated)) {
+            $validated['product_variation_id'] = $validated['product_variation_id'] ?? $validated['product_variant_id'];
+            unset($validated['product_variant_id']);
+        }
 
         $quantity = $validated['quantity'] ?? $orderItem->quantity;
         $unitPrice = $validated['unit_price'] ?? $orderItem->unit_price;

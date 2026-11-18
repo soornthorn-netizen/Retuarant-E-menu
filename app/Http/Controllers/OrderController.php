@@ -79,7 +79,8 @@ class OrderController extends Controller
             'notes' => 'nullable|string',
             'items' => 'nullable|array',
             'items.*.product_id' => 'required_with:items|exists:products,id',
-            'items.*.product_variant_id' => 'nullable|exists:product_variants,id',
+            'items.*.product_variation_id' => 'nullable|exists:product_variations,id',
+            'items.*.product_variant_id' => 'nullable|exists:product_variations,id',
             'items.*.quantity' => 'required_with:items|integer|min:1',
             'items.*.unit_price' => 'required_with:items|numeric|min:0',
             'items.*.special_instructions' => 'nullable|string',
@@ -128,9 +129,10 @@ class OrderController extends Controller
 
         if (!empty($items)) {
             foreach ($items as $item) {
+                $variationId = $item['product_variation_id'] ?? $item['product_variant_id'] ?? null;
                 $order->orderItems()->create([
                     'product_id' => $item['product_id'],
-                    'product_variant_id' => $item['product_variant_id'] ?? null,
+                    'product_variation_id' => $variationId,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'subtotal' => $item['quantity'] * $item['unit_price'],
