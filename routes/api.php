@@ -74,7 +74,8 @@ Route::prefix('lucky-wheel')->group(function () {
     Route::get('prizes', [LuckyWheelController::class, 'prizes']);
     Route::post('spin', [LuckyWheelController::class, 'spin']);
     Route::get('history', [LuckyWheelController::class, 'history']);
-    Route::post('redeem', [LuckyWheelController::class, 'redeem']);
+    Route::match(['get', 'post'], 'redeem', [LuckyWheelController::class, 'redeem']);
+    Route::get('verify/{code}', [LuckyWheelController::class, 'verifyCode']);
 });
 Route::apiResource('lucky-wheel-prizes', LuckyWheelPrizeController::class);
 Route::apiResource('lucky-wheel-spins', LuckyWheelSpinController::class);

@@ -164,26 +164,47 @@ class LuckyWheelController extends Controller
     }
 
     /**
-     * Redeem a won prize at the restaurant using its redeem code.
+     * Verify or redeem a won prize at the restaurant using its redeem code.
+     * Supports:
+     * - GET  /api/lucky-wheel/redeem?redeem_code=SPIN-XXXXX (Inspect/verify code without consuming)
+     * - POST /api/lucky-wheel/redeem {"redeem_code": "SPIN-XXXXX"} (Consume and redeem code)
      */
     public function redeem(Request $request)
     {
-        $validated = $request->validate([
-            'redeem_code' => 'required|string',
-            'branch_id' => 'nullable|exists:branches,id',
-        ]);
+        $code = $request->input('redeem_code') ?? $request->query('redeem_code') ?? $request->query('code');
+
+        if (!$code) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The redeem_code field is required. Provide it in JSON body or as ?redeem_code= query parameter.',
+            ], 422);
+        }
 
         $spin = LuckyWheelSpin::with(['prize.product', 'restaurant', 'branch'])
-            ->where('redeem_code', strtoupper(trim($validated['redeem_code'])))
+            ->where('redeem_code', strtoupper(trim($code)))
             ->first();
 
         if (!$spin) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid redeem code.',
+                'message' => 'Invalid redeem code: ' . $code . '. Please make sure you enter a valid code generated from /api/lucky-wheel/spin.',
             ], 404);
         }
 
+        // If GET request, return code status/preview without consuming it
+        if ($request->isMethod('get')) {
+            $isExpired = $spin->expires_at && now()->isAfter($spin->expires_at);
+            return response()->json([
+                'success' => true,
+                'message' => 'Redeem code verified successfully.',
+                'can_redeem' => !$spin->is_redeemed && !$isExpired,
+                'is_redeemed' => (bool)$spin->is_redeemed,
+                'is_expired' => (bool)$isExpired,
+                'data' => $spin,
+            ]);
+        }
+
+        // POST request: perform redemption
         if ($spin->is_redeemed) {
             return response()->json([
                 'success' => false,
@@ -201,12 +222,40 @@ class LuckyWheelController extends Controller
         $spin->update([
             'is_redeemed' => true,
             'redeemed_at' => now(),
-            'branch_id' => $validated['branch_id'] ?? $spin->branch_id,
+            'branch_id' => $request->input('branch_id') ?? $spin->branch_id,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Prize redeemed successfully!',
+            'data' => $spin,
+        ]);
+    }
+
+    /**
+     * Direct URL endpoint to verify a code: GET /api/lucky-wheel/verify/{code}
+     */
+    public function verifyCode(string $code)
+    {
+        $spin = LuckyWheelSpin::with(['prize.product', 'restaurant', 'branch'])
+            ->where('redeem_code', strtoupper(trim($code)))
+            ->first();
+
+        if (!$spin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid redeem code: ' . $code,
+            ], 404);
+        }
+
+        $isExpired = $spin->expires_at && now()->isAfter($spin->expires_at);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Redeem code verified successfully.',
+            'can_redeem' => !$spin->is_redeemed && !$isExpired,
+            'is_redeemed' => (bool)$spin->is_redeemed,
+            'is_expired' => (bool)$isExpired,
             'data' => $spin,
         ]);
     }
