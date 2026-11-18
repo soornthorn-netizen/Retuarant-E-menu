@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\Restaurant;
 use Illuminate\Http\Request;
 
 class BranchController extends Controller
@@ -41,16 +42,19 @@ class BranchController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'restaurant_id' => 'required|exists:restaurants,id',
+            'restaurant_id' => 'nullable|exists:restaurants,id',
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
             'address' => 'required|string',
             'city' => 'nullable|string|max:100',
-            'opening_time' => 'nullable|date_format:H:i',
-            'closing_time' => 'nullable|date_format:H:i',
+            'opening_time' => 'nullable|date_format:H:i,H:i:s',
+            'closing_time' => 'nullable|date_format:H:i,H:i:s',
             'status' => 'nullable|string|in:active,inactive',
         ]);
+
+        $validated['restaurant_id'] = $validated['restaurant_id'] ?? Restaurant::first()?->id;
+        $validated['status'] = $validated['status'] ?? 'active';
 
         $branch = Branch::create($validated);
 
@@ -96,14 +100,14 @@ class BranchController extends Controller
         }
 
         $validated = $request->validate([
-            'restaurant_id' => 'sometimes|required|exists:restaurants,id',
+            'restaurant_id' => 'sometimes|nullable|exists:restaurants,id',
             'name' => 'sometimes|required|string|max:255',
             'phone' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
             'address' => 'sometimes|required|string',
             'city' => 'nullable|string|max:100',
-            'opening_time' => 'nullable|date_format:H:i',
-            'closing_time' => 'nullable|date_format:H:i',
+            'opening_time' => 'nullable|date_format:H:i,H:i:s',
+            'closing_time' => 'nullable|date_format:H:i,H:i:s',
             'status' => 'nullable|string|in:active,inactive',
         ]);
 

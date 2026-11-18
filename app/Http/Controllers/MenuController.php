@@ -37,13 +37,15 @@ class MenuController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'restaurant_id' => 'required|exists:restaurants,id',
+            'restaurant_id' => 'nullable|exists:restaurants,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'start_time' => 'nullable|date_format:H:i',
-            'end_time' => 'nullable|date_format:H:i',
+            'start_time' => 'nullable|date_format:H:i,H:i:s',
+            'end_time' => 'nullable|date_format:H:i,H:i:s',
             'status' => 'nullable|string|in:active,inactive',
         ]);
+
+        $validated['restaurant_id'] = $validated['restaurant_id'] ?? \App\Models\Restaurant::first()?->id;
 
         $menu = Menu::create($validated);
 
@@ -92,8 +94,8 @@ class MenuController extends Controller
             'restaurant_id' => 'sometimes|required|exists:restaurants,id',
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
-            'start_time' => 'nullable|date_format:H:i',
-            'end_time' => 'nullable|date_format:H:i',
+            'start_time' => 'nullable|date_format:H:i,H:i:s',
+            'end_time' => 'nullable|date_format:H:i,H:i:s',
             'status' => 'nullable|string|in:active,inactive',
         ]);
 

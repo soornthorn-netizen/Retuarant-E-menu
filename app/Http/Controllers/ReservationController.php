@@ -54,7 +54,7 @@ class ReservationController extends Controller
             'customer_email' => 'nullable|email|max:255',
             'guest_count' => 'required|integer|min:1',
             'reservation_date' => 'required|date',
-            'reservation_time' => 'required|date_format:H:i',
+            'reservation_time' => 'required|date_format:H:i,H:i:s',
             'status' => 'nullable|string|in:pending,confirmed,cancelled,completed',
             'special_requests' => 'nullable|string',
         ]);
@@ -110,7 +110,7 @@ class ReservationController extends Controller
             'customer_email' => 'nullable|email|max:255',
             'guest_count' => 'sometimes|required|integer|min:1',
             'reservation_date' => 'sometimes|required|date',
-            'reservation_time' => 'sometimes|required|date_format:H:i',
+            'reservation_time' => 'sometimes|required|date_format:H:i,H:i:s',
             'status' => 'nullable|string|in:pending,confirmed,cancelled,completed',
             'special_requests' => 'nullable|string',
         ]);
