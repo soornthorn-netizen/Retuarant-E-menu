@@ -71,5 +71,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(LuckyWheelSpin::class);
     }
+
+    public function telegramUser()
+    {
+        return $this->hasOne(TelegramUser::class);
+    }
 }
 

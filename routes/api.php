@@ -38,6 +38,10 @@ use App\Http\Controllers\RoadMapController;
 use App\Http\Controllers\LuckyWheelController;
 use App\Http\Controllers\LuckyWheelPrizeController;
 use App\Http\Controllers\LuckyWheelSpinController;
+use App\Http\Controllers\TelegramBotController;
+use App\Http\Controllers\TelegramUserController;
+use App\Http\Controllers\TelegramNotificationLogController;
+use App\Http\Controllers\DailySummaryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -124,3 +128,13 @@ Route::apiResource('promotions', PromotionController::class);
 Route::apiResource('reviews', ReviewController::class);
 Route::apiResource('road-maps', RoadMapController::class);
 Route::apiResource('profiles', ProfileController::class);
+
+// Telegram Bots, Users & Notification Logs
+Route::apiResource('telegram-bots', TelegramBotController::class);
+Route::apiResource('telegram-users', TelegramUserController::class);
+Route::apiResource('telegram-notification-logs', TelegramNotificationLogController::class);
+
+// Daily Summaries & Automated Reports
+Route::post('daily-summaries/generate', [DailySummaryController::class, 'generate']);
+Route::apiResource('daily-summaries', DailySummaryController::class);
+
